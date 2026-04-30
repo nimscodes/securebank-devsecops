@@ -5,7 +5,8 @@ export type ApiHealth = {
   database: string;
 };
 
-const apiUrl = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const apiUrl =
+  process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export async function getApiHealth(): Promise<ApiHealth | null> {
   try {

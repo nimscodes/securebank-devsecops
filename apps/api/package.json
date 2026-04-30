@@ -9,7 +9,9 @@
     "start": "node dist/server.js",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
+    "format": "prettier --write . && prisma format",
     "prisma:generate": "prisma generate",
+    "prisma:format": "prisma format",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio"

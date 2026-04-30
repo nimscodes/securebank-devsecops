@@ -57,7 +57,10 @@ export default async function Home() {
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {accounts.map((account) => (
-              <article key={account.name} className="rounded-md border border-white/15 bg-white/10 p-4">
+              <article
+                key={account.name}
+                className="rounded-md border border-white/15 bg-white/10 p-4"
+              >
                 <p className="text-sm text-white/70">{account.name}</p>
                 <p className="mt-3 text-xl font-semibold">{account.balance}</p>
                 <p className="mt-2 text-sm text-bank-mint">{account.status}</p>
@@ -97,14 +100,21 @@ export default async function Home() {
               const Icon = isCredit ? ArrowDownLeft : ArrowUpRight;
 
               return (
-                <div key={transaction.label} className="flex items-center justify-between gap-4 py-4">
+                <div
+                  key={transaction.label}
+                  className="flex items-center justify-between gap-4 py-4"
+                >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-md bg-bank-sky text-bank-ink">
                       <Icon size={18} aria-hidden="true" />
                     </div>
                     <p className="font-medium">{transaction.label}</p>
                   </div>
-                  <p className={isCredit ? "font-semibold text-bank-green" : "font-semibold text-slate-700"}>
+                  <p
+                    className={
+                      isCredit ? "font-semibold text-bank-green" : "font-semibold text-slate-700"
+                    }
+                  >
                     {transaction.amount}
                   </p>
                 </div>

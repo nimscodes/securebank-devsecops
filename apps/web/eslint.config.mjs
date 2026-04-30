@@ -5,17 +5,11 @@ export default [
   {
     ignores: [".next/**", "node_modules/**"]
   },
+  nextPlugin.flatConfig.coreWebVitals,
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parser: tsParser
-    },
-    plugins: {
-      "@next/next": nextPlugin
-    },
-    rules: {
-      ...nextPlugin.configs.recommended.rules,
-      ...nextPlugin.configs["core-web-vitals"].rules
     }
   }
 ];
