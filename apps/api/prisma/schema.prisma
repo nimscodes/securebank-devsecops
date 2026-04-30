@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT
+  INVESTMENT
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  POSTED
+  FAILED
+  REVERSED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  accounts Account[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Account {
+  id            String        @id @default(cuid())
+  userId        String
+  name          String
+  accountNumber String        @unique
+  type          AccountType
+  status        AccountStatus @default(ACTIVE)
+  balance       Decimal       @default(0.00) @db.Decimal(14, 2)
+  currency      String        @default("USD")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  outgoingTransactions Transaction[] @relation("FromAccount")
+  incomingTransactions Transaction[] @relation("ToAccount")
+
+  @@index([userId])
+  @@index([accountNumber])
+  @@map("accounts")
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  fromAccountId String?
+  toAccountId   String?
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  amount        Decimal           @db.Decimal(14, 2)
+  currency      String            @default("USD")
+  description   String?
+  reference     String            @unique
+  createdAt     DateTime          @default(now())
+  postedAt      DateTime?
+
+  fromAccount Account? @relation("FromAccount", fields: [fromAccountId], references: [id], onDelete: Restrict)
+  toAccount   Account? @relation("ToAccount", fields: [toAccountId], references: [id], onDelete: Restrict)
+
+  @@index([fromAccountId])
+  @@index([toAccountId])
+  @@index([reference])
+  @@index([createdAt])
+  @@map("transactions")
+}
