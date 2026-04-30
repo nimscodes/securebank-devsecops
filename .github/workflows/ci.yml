@@ -84,13 +84,22 @@ jobs:
   iac-scan:
     name: Checkov IaC scan
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('infra/terraform/**') != '' }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Detect Terraform directory
+        id: terraform
+        run: |
+          if [ -d "infra/terraform" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Checkov Terraform scan
+        if: steps.terraform.outputs.exists == 'true'
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: infra/terraform
