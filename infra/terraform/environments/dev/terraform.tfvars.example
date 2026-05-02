@@ -1,0 +1,25 @@
+aws_region  = "us-east-1"
+environment = "dev"
+
+project_name = "securebank"
+
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+vpc_cidr                 = "10.20.0.0/16"
+public_subnet_cidrs      = ["10.20.0.0/24", "10.20.1.0/24"]
+private_app_subnet_cidrs = ["10.20.10.0/24", "10.20.11.0/24"]
+private_db_subnet_cidrs  = ["10.20.20.0/24", "10.20.21.0/24"]
+
+# Disabled by default to avoid NAT gateway cost in dev.
+enable_nat_gateway = false
+
+# Placeholder images until a later ECR/deployment phase.
+web_image = "replace-me/securebank-web:latest"
+api_image = "replace-me/securebank-api:latest"
+
+database_name            = "securebank"
+database_master_username = "securebank_admin"
+
+tags = {
+  Owner = "platform"
+}
