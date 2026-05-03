@@ -222,6 +222,60 @@ variable "secret_recovery_window_in_days" {
   default     = 7
 }
 
+variable "ecr_image_tag_mutability" {
+  description = "ECR image tag mutability setting."
+  type        = string
+  default     = "IMMUTABLE"
+}
+
+variable "ecr_max_tagged_images" {
+  description = "Maximum tagged images retained in each ECR repository."
+  type        = number
+  default     = 30
+}
+
+variable "ecr_untagged_image_expiration_days" {
+  description = "Days to retain untagged ECR images."
+  type        = number
+  default     = 7
+}
+
+variable "aws_account_id" {
+  description = "AWS account ID used to build least-privilege IAM policy ARNs."
+  type        = string
+  default     = "000000000000"
+}
+
+variable "github_repository" {
+  description = "GitHub repository allowed to assume the deployment preparation OIDC role."
+  type        = string
+  default     = "nimscodes/securebank-devsecops"
+}
+
+variable "github_branch" {
+  description = "GitHub branch allowed to assume the deployment preparation OIDC role."
+  type        = string
+  default     = "main"
+}
+
+variable "terraform_state_bucket_name" {
+  description = "Future Terraform remote state bucket name created by backend bootstrap."
+  type        = string
+  default     = "securebank-dev-terraform-state-placeholder"
+}
+
+variable "terraform_lock_table_name" {
+  description = "Future Terraform state lock table name created by backend bootstrap."
+  type        = string
+  default     = "securebank-dev-terraform-locks"
+}
+
+variable "terraform_state_key_prefix" {
+  description = "Future S3 key prefix for Terraform state files."
+  type        = string
+  default     = "securebank"
+}
+
 variable "database_name" {
   description = "Initial PostgreSQL database name."
   type        = string

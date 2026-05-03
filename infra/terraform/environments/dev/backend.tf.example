@@ -1,0 +1,13 @@
+# Remote backend is intentionally not active in Phase 4.
+# Bootstrap resources in infra/terraform/bootstrap/backend must be created
+# manually in a later approved phase before this block is copied to backend.tf.
+#
+# terraform {
+#   backend "s3" {
+#     bucket         = "securebank-dev-terraform-state-placeholder"
+#     key            = "securebank/dev/terraform.tfstate"
+#     region         = "us-east-1"
+#     dynamodb_table = "securebank-dev-terraform-locks"
+#     encrypt        = true
+#   }
+# }

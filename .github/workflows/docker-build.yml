@@ -1,0 +1,46 @@
+name: Docker Build
+
+"on":
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: securebank-api:phase-4
+
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          tags: securebank-web:phase-4
+
+      # Future deployment phase:
+      # - configure AWS credentials with GitHub OIDC
+      # - login to ECR
+      # - tag images with ECR repository URLs
+      # - set push: true
+      #
+      # Phase 4 is build-only and does not push images.

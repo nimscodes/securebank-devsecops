@@ -1,0 +1,10 @@
+aws_region = "us-east-1"
+
+# Must be globally unique across AWS.
+state_bucket_name = "securebank-dev-terraform-state-placeholder"
+
+lock_table_name = "securebank-dev-terraform-locks"
+
+tags = {
+  Owner = "platform"
+}

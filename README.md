@@ -1,6 +1,6 @@
 # SecureBank
 
-SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions.
+SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, and Phase 4 prepares ECR, GitHub OIDC, and remote backend support without deployment.
 
 ## Repository Structure
 
@@ -101,4 +101,20 @@ The stack includes:
 
 Phase 2 does not include AWS deployment, ECR, ECS, OIDC, or Terraform infrastructure resources.
 
-AWS deployment, secrets management, runtime security scanning, and production infrastructure are intentionally deferred to later phases.
+## Phase 3 Scope
+
+- Modular Terraform foundation for VPC, security groups, ALB, ECS, RDS, Secrets Manager placeholders, and CloudWatch
+- Dev environment under `infra/terraform/environments/dev`
+- Cost guardrails with NAT gateway disabled by default
+- Terraform validation only, with no `terraform apply`
+
+## Phase 4 Scope
+
+- ECR Terraform module for web and API image repositories
+- GitHub Actions OIDC Terraform module scoped to `nimscodes/securebank-devsecops`
+- Terraform backend bootstrap code for future S3 state and DynamoDB locking
+- Safe Terraform plan workflow using OIDC placeholders
+- Safe Docker build workflow that does not push images
+- Deployment preparation documentation in `docs/deployment-prep.md`
+
+AWS deployment, static credentials, ECR image publishing, remote backend activation, runtime security scanning, and production infrastructure are intentionally deferred to later phases.
