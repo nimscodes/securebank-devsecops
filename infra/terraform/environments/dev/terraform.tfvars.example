@@ -17,15 +17,6 @@ enable_nat_gateway = false
 web_image = "replace-me/securebank-web:latest"
 api_image = "replace-me/securebank-api:latest"
 
-aws_account_id = "000000000000"
-
-github_repository = "nimscodes/securebank-devsecops"
-github_branch     = "main"
-
-terraform_state_bucket_name = "securebank-dev-terraform-state-placeholder"
-terraform_lock_table_name   = "securebank-dev-terraform-locks"
-terraform_state_key_prefix  = "securebank"
-
 database_name            = "securebank"
 database_master_username = "securebank_admin"
 

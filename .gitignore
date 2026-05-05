@@ -12,9 +12,15 @@ Dockerfile.local
 .turbo
 prisma/generated
 .terraform/
+**/.terraform/
+**/terraform.tfvars
 *.tfstate
 *.tfstate.*
+*.tfstate.backup
+**/*.tfstate
+**/*.tfstate.backup
 *.tfplan
+**/*.tfplan
 crash.log
 crash.*.log
 override.tf

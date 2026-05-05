@@ -1,6 +1,6 @@
 # SecureBank
 
-SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, and Phase 4 prepares ECR, GitHub OIDC, and remote backend support without deployment.
+SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, Phase 4 prepares ECR, GitHub OIDC, and remote backend support without deployment, and Phase 5A documents the safe AWS bootstrap order for backend state, OIDC, and ECR only.
 
 ## Repository Structure
 
@@ -9,7 +9,7 @@ apps/
   web/        Next.js frontend with TypeScript and Tailwind
   api/        Node.js Express API with TypeScript and Prisma
 infra/
-  terraform/ Reserved for later infrastructure phases
+  terraform/ Terraform modules, bootstrap environments, and dev environment
 docs/         Project documentation
 .github/
   workflows/ GitHub Actions CI and security workflows
@@ -118,3 +118,15 @@ Phase 2 does not include AWS deployment, ECR, ECS, OIDC, or Terraform infrastruc
 - Deployment preparation documentation in `docs/deployment-prep.md`
 
 AWS deployment, static credentials, ECR image publishing, remote backend activation, runtime security scanning, and production infrastructure are intentionally deferred to later phases.
+
+## Phase 5A Bootstrap Guide
+
+Phase 5A is documented in `docs/phase-5a-bootstrap.md`. It covers the safe, minimal bootstrap path for Terraform remote state, DynamoDB locking, GitHub OIDC, and ECR repositories only. It explicitly excludes ECS, ALB, RDS, VPC, NAT Gateway, and app deployment apply steps.
+
+The safer Phase 5A order is:
+
+1. Apply `infra/terraform/bootstrap/backend`
+2. Apply `infra/terraform/bootstrap/oidc-ecr`
+3. Configure GitHub repository variables
+4. Run the Terraform Plan workflow
+5. Do not apply `infra/terraform/environments/dev` until Phase 5B

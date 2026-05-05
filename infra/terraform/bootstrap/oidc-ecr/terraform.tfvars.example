@@ -1,0 +1,20 @@
+aws_region     = "us-east-1"
+aws_account_id = "000000000000"
+
+project_name = "securebank"
+environment  = "dev"
+
+github_repository = "nimscodes/securebank-devsecops"
+github_branch     = "main"
+
+terraform_state_bucket_name = "securebank-dev-terraform-state-placeholder"
+terraform_lock_table_name   = "securebank-dev-terraform-locks"
+terraform_state_key_prefix  = "securebank"
+
+ecr_image_tag_mutability           = "IMMUTABLE"
+ecr_max_tagged_images              = 30
+ecr_untagged_image_expiration_days = 7
+
+tags = {
+  Owner = "platform"
+}

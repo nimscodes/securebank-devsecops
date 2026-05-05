@@ -42,6 +42,25 @@ It defines:
 
 Do not enable the dev remote backend until the bootstrap resources are manually created in a later approved phase.
 
+## OIDC and ECR Bootstrap
+
+GitHub OIDC and ECR are also separated from the dev app environment:
+
+```text
+infra/terraform/bootstrap/oidc-ecr
+```
+
+This environment creates only:
+
+- GitHub OIDC provider
+- GitHub Actions IAM role scoped to `nimscodes/securebank-devsecops`
+- web ECR repository
+- API ECR repository
+
+It does not create VPC, subnets, NAT Gateway, ALB, ECS, RDS, security groups, CloudWatch app logs, or Secrets Manager app secrets.
+
+This avoids targeted applies from `infra/terraform/environments/dev`.
+
 ## ECR and Deployment
 
 The ECR module prepares repositories for:
@@ -91,6 +110,14 @@ terraform init -backend=false
 terraform validate
 ```
 
+From `infra/terraform/bootstrap/oidc-ecr`:
+
+```bash
+terraform init -backend=false
+terraform validate
+terraform plan
+```
+
 From `infra/terraform/environments/dev`:
 
 ```bash
@@ -104,3 +131,13 @@ Do not run:
 terraform apply
 terraform destroy
 ```
+
+## Safer Phase 5A Order
+
+Use this order when Phase 5A apply is explicitly approved:
+
+1. Apply `infra/terraform/bootstrap/backend`
+2. Apply `infra/terraform/bootstrap/oidc-ecr`
+3. Configure GitHub repository variables
+4. Run the Terraform Plan workflow
+5. Do not apply `infra/terraform/environments/dev` until Phase 5B

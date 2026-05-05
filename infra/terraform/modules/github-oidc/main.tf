@@ -17,7 +17,7 @@ resource "aws_iam_openid_connect_provider" "github" {
     "sts.amazonaws.com"
   ]
 
-  thumbprint_list = []
+  thumbprint_list = var.thumbprint_list
 
   tags = merge(var.tags, {
     Name = "${var.name_prefix}-github-oidc"

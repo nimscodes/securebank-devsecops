@@ -25,6 +25,12 @@ variable "github_branch" {
   default     = "main"
 }
 
+variable "thumbprint_list" {
+  description = "GitHub Actions OIDC certificate thumbprints accepted by AWS IAM."
+  type        = list(string)
+  default     = ["2b18947a6a9fc7764fd8b5fb18a863b0c6dac24f"]
+}
+
 variable "ecr_repository_arns" {
   description = "ECR repository ARNs GitHub Actions may push and pull."
   type        = list(string)
