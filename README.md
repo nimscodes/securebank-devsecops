@@ -1,6 +1,6 @@
 # SecureBank
 
-SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, Phase 4 prepares ECR, GitHub OIDC, and remote backend support without deployment, and Phase 5A documents the safe AWS bootstrap order for backend state, OIDC, and ECR only.
+SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, Phase 4 prepares ECR, GitHub OIDC, and remote backend support without deployment, and Phase 5A bootstraps GitHub OIDC and ECR for safe AWS automation.
 
 ## Repository Structure
 
@@ -119,14 +119,14 @@ Phase 2 does not include AWS deployment, ECR, ECS, OIDC, or Terraform infrastruc
 
 AWS deployment, static credentials, ECR image publishing, remote backend activation, runtime security scanning, and production infrastructure are intentionally deferred to later phases.
 
-## Phase 5A Bootstrap Guide
+## Phase 5A: AWS Bootstrap
 
-Phase 5A is documented in `docs/phase-5a-bootstrap.md`. It covers the safe, minimal bootstrap path for Terraform remote state, DynamoDB locking, GitHub OIDC, and ECR repositories only. It explicitly excludes ECS, ALB, RDS, VPC, NAT Gateway, and app deployment apply steps.
+Implemented the secure AWS automation foundation for the project:
 
-The safer Phase 5A order is:
+- Created ECR repositories for web and API containers
+- Configured ECR image lifecycle policies
+- Created GitHub OIDC identity provider
+- Created GitHub Actions IAM role with restricted trust policy
+- Enabled GitHub Actions to authenticate to AWS without static access keys
 
-1. Apply `infra/terraform/bootstrap/backend`
-2. Apply `infra/terraform/bootstrap/oidc-ecr`
-3. Configure GitHub repository variables
-4. Run the Terraform Plan workflow
-5. Do not apply `infra/terraform/environments/dev` until Phase 5B
+No application infrastructure was deployed in this phase.
