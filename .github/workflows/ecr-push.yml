@@ -1,0 +1,123 @@
+name: Build and Push Images to ECR
+
+"on":
+  push:
+    branches:
+      - main
+    paths:
+      - apps/web/**
+      - apps/api/**
+      - package.json
+      - package-lock.json
+      - docker-compose.yml
+      - .github/workflows/ecr-push.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-push-web:
+    name: Build and push web image
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+      ECR_REPOSITORY_URL: ${{ vars.WEB_ECR_REPOSITORY_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required GitHub variables
+        run: |
+          if [ -z "$AWS_REGION" ]; then
+            echo "Missing GitHub repository variable: AWS_REGION"
+            exit 1
+          fi
+
+          if [ -z "$AWS_ROLE_ARN" ]; then
+            echo "Missing GitHub repository variable: AWS_ROLE_ARN"
+            exit 1
+          fi
+
+          if [ -z "$ECR_REPOSITORY_URL" ]; then
+            echo "Missing GitHub repository variable: WEB_ECR_REPOSITORY_URL"
+            exit 1
+          fi
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REPOSITORY_URL }}:latest
+            ${{ env.ECR_REPOSITORY_URL }}:${{ github.sha }}
+
+  build-and-push-api:
+    name: Build and push API image
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+      ECR_REPOSITORY_URL: ${{ vars.API_ECR_REPOSITORY_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required GitHub variables
+        run: |
+          if [ -z "$AWS_REGION" ]; then
+            echo "Missing GitHub repository variable: AWS_REGION"
+            exit 1
+          fi
+
+          if [ -z "$AWS_ROLE_ARN" ]; then
+            echo "Missing GitHub repository variable: AWS_ROLE_ARN"
+            exit 1
+          fi
+
+          if [ -z "$ECR_REPOSITORY_URL" ]; then
+            echo "Missing GitHub repository variable: API_ECR_REPOSITORY_URL"
+            exit 1
+          fi
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REPOSITORY_URL }}:latest
+            ${{ env.ECR_REPOSITORY_URL }}:${{ github.sha }}

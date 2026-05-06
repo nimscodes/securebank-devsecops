@@ -130,3 +130,18 @@ Implemented the secure AWS automation foundation for the project:
 - Enabled GitHub Actions to authenticate to AWS without static access keys
 
 No application infrastructure was deployed in this phase.
+
+## Phase 5B: ECR Image Push
+
+Added a GitHub Actions workflow that builds the web and API Docker images and pushes them to the existing Amazon ECR repositories from Phase 5A.
+
+Required GitHub Actions repository variables:
+
+```text
+AWS_REGION
+AWS_ROLE_ARN
+WEB_ECR_REPOSITORY_URL
+API_ECR_REPOSITORY_URL
+```
+
+The workflow uses GitHub OIDC to authenticate to AWS without static access keys. ECS deployment is not part of this phase.
