@@ -18,6 +18,11 @@ output "private_db_subnet_ids" {
   value       = module.vpc.private_db_subnet_ids
 }
 
+output "vpc_endpoint_ids" {
+  description = "Private service VPC endpoint IDs."
+  value       = var.enable_private_service_endpoints ? module.vpc_endpoints[0].interface_endpoint_ids : null
+}
+
 output "alb_dns_name" {
   description = "ALB DNS name."
   value       = module.alb.alb_dns_name

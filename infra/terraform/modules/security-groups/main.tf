@@ -18,6 +18,8 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_https" {
+  count = var.enable_https_ingress ? 1 : 0
+
   security_group_id = aws_security_group.alb.id
   description       = "Allow HTTPS traffic to the ALB."
   cidr_ipv4         = var.alb_ingress_cidr

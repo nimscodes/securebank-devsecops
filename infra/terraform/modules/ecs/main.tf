@@ -1,6 +1,15 @@
 locals {
   web_container_name = "web"
   api_container_name = "api"
+
+  secret_value_froms = concat(
+    [for secret in var.web_secrets : secret.valueFrom],
+    [for secret in var.api_secrets : secret.valueFrom]
+  )
+
+  secret_arns = distinct([
+    for value_from in local.secret_value_froms : replace(value_from, "/:[^:]+::$/", "")
+  ])
 }
 
 resource "aws_ecs_cluster" "this" {
@@ -38,6 +47,26 @@ resource "aws_iam_role" "task_execution" {
 resource "aws_iam_role_policy_attachment" "task_execution" {
   role       = aws_iam_role.task_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy" "task_execution_secrets" {
+  count = length(var.web_secrets) + length(var.api_secrets) > 0 ? 1 : 0
+
+  name = "${var.name_prefix}-ecs-execution-secrets"
+  role = aws_iam_role.task_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = local.secret_arns
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role" "task" {
@@ -113,6 +142,7 @@ resource "aws_ecs_task_definition" "api" {
       name      = local.api_container_name
       image     = var.api_image
       essential = true
+      command   = var.api_command
 
       portMappings = [
         {

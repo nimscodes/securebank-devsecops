@@ -60,6 +60,12 @@ variable "enable_nat_gateway" {
   default     = false
 }
 
+variable "enable_private_service_endpoints" {
+  description = "Whether to create VPC endpoints that let private ECS tasks reach ECR, CloudWatch Logs, Secrets Manager, and S3 without a NAT gateway."
+  type        = bool
+  default     = true
+}
+
 variable "alb_ingress_cidr" {
   description = "CIDR block allowed to access the ALB."
   type        = string
@@ -79,15 +85,15 @@ variable "alb_deletion_protection" {
 }
 
 variable "web_image" {
-  description = "Placeholder container image for the web service."
+  description = "Container image for the web service."
   type        = string
-  default     = "replace-me/securebank-web:latest"
+  default     = "985059095414.dkr.ecr.us-east-1.amazonaws.com/securebank-dev-web:latest"
 }
 
 variable "api_image" {
-  description = "Placeholder container image for the API service."
+  description = "Container image for the API service."
   type        = string
-  default     = "replace-me/securebank-api:latest"
+  default     = "985059095414.dkr.ecr.us-east-1.amazonaws.com/securebank-dev-api:latest"
 }
 
 variable "web_container_port" {
@@ -246,38 +252,44 @@ variable "database_engine_version" {
   default     = "16.4"
 }
 
-variable "database_instance_class" {
+variable "db_instance_class" {
   description = "RDS instance class."
   type        = string
   default     = "db.t4g.micro"
 }
 
-variable "database_allocated_storage" {
+variable "db_allocated_storage" {
   description = "Initial RDS allocated storage in GB."
   type        = number
   default     = 20
 }
 
-variable "database_max_allocated_storage" {
+variable "db_max_allocated_storage" {
   description = "Maximum RDS autoscaled storage in GB."
   type        = number
   default     = 100
 }
 
-variable "database_backup_retention_period" {
+variable "db_backup_retention_period" {
   description = "RDS backup retention in days."
   type        = number
-  default     = 7
+  default     = 1
 }
 
-variable "database_deletion_protection" {
-  description = "Whether RDS deletion protection is enabled."
-  type        = bool
-  default     = true
-}
-
-variable "database_skip_final_snapshot" {
-  description = "Whether to skip the final DB snapshot on deletion."
+variable "db_multi_az" {
+  description = "Whether the dev RDS instance is deployed across multiple availability zones."
   type        = bool
   default     = false
+}
+
+variable "db_deletion_protection" {
+  description = "Whether RDS deletion protection is enabled."
+  type        = bool
+  default     = false
+}
+
+variable "db_skip_final_snapshot" {
+  description = "Whether to skip the final DB snapshot on deletion."
+  type        = bool
+  default     = true
 }

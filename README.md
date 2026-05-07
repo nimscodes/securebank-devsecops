@@ -145,3 +145,11 @@ API_ECR_REPOSITORY_URL
 ```
 
 The workflow uses GitHub OIDC to authenticate to AWS without static access keys. ECS deployment is not part of this phase.
+
+## Phase 5C: Dev Deployment Preparation
+
+Prepared the Terraform dev environment for the first controlled AWS application infrastructure deployment.
+
+Phase 5C keeps NAT Gateway disabled by default, uses the Phase 5A ECR images, keeps RDS private and encrypted, injects database connection settings into ECS without hardcoded passwords, and adds private AWS service endpoints so ECS tasks can pull images and write logs without public internet egress.
+
+No `terraform apply` was run in this phase.

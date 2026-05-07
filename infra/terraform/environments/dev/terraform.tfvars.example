@@ -13,12 +13,25 @@ private_db_subnet_cidrs  = ["10.20.20.0/24", "10.20.21.0/24"]
 # Disabled by default to avoid NAT gateway cost in dev.
 enable_nat_gateway = false
 
-# Placeholder images until a later ECR/deployment phase.
-web_image = "replace-me/securebank-web:latest"
-api_image = "replace-me/securebank-api:latest"
+# Enabled so private ECS tasks can pull ECR images and write logs without NAT.
+enable_private_service_endpoints = true
+
+web_image = "985059095414.dkr.ecr.us-east-1.amazonaws.com/securebank-dev-web:latest"
+api_image = "985059095414.dkr.ecr.us-east-1.amazonaws.com/securebank-dev-api:latest"
+
+web_desired_count = 1
+api_desired_count = 1
 
 database_name            = "securebank"
 database_master_username = "securebank_admin"
+
+db_instance_class          = "db.t4g.micro"
+db_allocated_storage       = 20
+db_max_allocated_storage   = 100
+db_multi_az                = false
+db_deletion_protection     = false
+db_backup_retention_period = 1
+db_skip_final_snapshot     = true
 
 tags = {
   Owner = "platform"

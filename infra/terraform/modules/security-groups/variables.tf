@@ -14,6 +14,12 @@ variable "alb_ingress_cidr" {
   default     = "0.0.0.0/0"
 }
 
+variable "enable_https_ingress" {
+  description = "Whether to allow internet HTTPS traffic to the ALB security group."
+  type        = bool
+  default     = false
+}
+
 variable "web_container_port" {
   description = "Web container port."
   type        = number

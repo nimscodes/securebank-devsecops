@@ -59,6 +59,12 @@ variable "backup_retention_period" {
   default     = 7
 }
 
+variable "multi_az" {
+  description = "Whether to deploy the RDS instance across multiple availability zones."
+  type        = bool
+  default     = false
+}
+
 variable "deletion_protection" {
   description = "Whether deletion protection is enabled."
   type        = bool

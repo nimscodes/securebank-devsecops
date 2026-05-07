@@ -130,6 +130,16 @@ variable "api_secrets" {
   default = []
 }
 
+variable "api_command" {
+  description = "Command used to start the API container."
+  type        = list(string)
+  default = [
+    "sh",
+    "-c",
+    "export ENCODED_DB_PASSWORD=$(node -p \"encodeURIComponent(process.env.DB_PASSWORD)\") && export DATABASE_URL=\"postgresql://$${DB_USER}:$${ENCODED_DB_PASSWORD}@$${DB_HOST}:$${DB_PORT}/$${DB_NAME}?schema=public\" && npx prisma migrate deploy && node dist/server.js"
+  ]
+}
+
 variable "enable_container_insights" {
   description = "Whether ECS container insights are enabled."
   type        = bool

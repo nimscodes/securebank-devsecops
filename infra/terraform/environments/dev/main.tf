@@ -24,13 +24,27 @@ module "vpc" {
 module "security_groups" {
   source = "../../modules/security-groups"
 
-  name_prefix        = local.name_prefix
-  vpc_id             = module.vpc.vpc_id
-  alb_ingress_cidr   = var.alb_ingress_cidr
-  web_container_port = var.web_container_port
-  api_container_port = var.api_container_port
-  database_port      = var.database_port
-  tags               = local.common_tags
+  name_prefix          = local.name_prefix
+  vpc_id               = module.vpc.vpc_id
+  alb_ingress_cidr     = var.alb_ingress_cidr
+  enable_https_ingress = var.certificate_arn != null && var.certificate_arn != ""
+  web_container_port   = var.web_container_port
+  api_container_port   = var.api_container_port
+  database_port        = var.database_port
+  tags                 = local.common_tags
+}
+
+module "vpc_endpoints" {
+  count  = var.enable_private_service_endpoints ? 1 : 0
+  source = "../../modules/vpc-endpoints"
+
+  name_prefix                = local.name_prefix
+  aws_region                 = var.aws_region
+  vpc_id                     = module.vpc.vpc_id
+  private_app_subnet_ids     = module.vpc.private_app_subnet_ids
+  private_app_route_table_id = module.vpc.private_app_route_table_id
+  ecs_security_group_id      = module.security_groups.ecs_security_group_id
+  tags                       = local.common_tags
 }
 
 module "cloudwatch" {
@@ -60,12 +74,13 @@ module "rds" {
   master_username         = var.database_master_username
   database_port           = var.database_port
   engine_version          = var.database_engine_version
-  instance_class          = var.database_instance_class
-  allocated_storage       = var.database_allocated_storage
-  max_allocated_storage   = var.database_max_allocated_storage
-  backup_retention_period = var.database_backup_retention_period
-  deletion_protection     = var.database_deletion_protection
-  skip_final_snapshot     = var.database_skip_final_snapshot
+  instance_class          = var.db_instance_class
+  allocated_storage       = var.db_allocated_storage
+  max_allocated_storage   = var.db_max_allocated_storage
+  backup_retention_period = var.db_backup_retention_period
+  multi_az                = var.db_multi_az
+  deletion_protection     = var.db_deletion_protection
+  skip_final_snapshot     = var.db_skip_final_snapshot
   tags                    = local.common_tags
 }
 
@@ -88,28 +103,52 @@ module "alb" {
 module "ecs" {
   source = "../../modules/ecs"
 
-  name_prefix               = local.name_prefix
-  aws_region                = var.aws_region
-  private_app_subnet_ids    = module.vpc.private_app_subnet_ids
-  ecs_security_group_id     = module.security_groups.ecs_security_group_id
-  web_target_group_arn      = module.alb.web_target_group_arn
-  api_target_group_arn      = module.alb.api_target_group_arn
-  web_image                 = var.web_image
-  api_image                 = var.api_image
-  web_container_port        = var.web_container_port
-  api_container_port        = var.api_container_port
-  web_cpu                   = var.web_cpu
-  web_memory                = var.web_memory
-  api_cpu                   = var.api_cpu
-  api_memory                = var.api_memory
-  web_desired_count         = var.web_desired_count
-  api_desired_count         = var.api_desired_count
-  web_log_group_name        = module.cloudwatch.web_log_group_name
-  api_log_group_name        = module.cloudwatch.api_log_group_name
-  web_environment           = var.web_environment
-  api_environment           = var.api_environment
-  web_secrets               = var.web_secrets
-  api_secrets               = var.api_secrets
+  depends_on = [module.vpc_endpoints]
+
+  name_prefix            = local.name_prefix
+  aws_region             = var.aws_region
+  private_app_subnet_ids = module.vpc.private_app_subnet_ids
+  ecs_security_group_id  = module.security_groups.ecs_security_group_id
+  web_target_group_arn   = module.alb.web_target_group_arn
+  api_target_group_arn   = module.alb.api_target_group_arn
+  web_image              = var.web_image
+  api_image              = var.api_image
+  web_container_port     = var.web_container_port
+  api_container_port     = var.api_container_port
+  web_cpu                = var.web_cpu
+  web_memory             = var.web_memory
+  api_cpu                = var.api_cpu
+  api_memory             = var.api_memory
+  web_desired_count      = var.web_desired_count
+  api_desired_count      = var.api_desired_count
+  web_log_group_name     = module.cloudwatch.web_log_group_name
+  api_log_group_name     = module.cloudwatch.api_log_group_name
+  web_environment        = var.web_environment
+  api_environment = concat(var.api_environment, [
+    {
+      name  = "DB_HOST"
+      value = module.rds.db_address
+    },
+    {
+      name  = "DB_PORT"
+      value = tostring(module.rds.db_port)
+    },
+    {
+      name  = "DB_NAME"
+      value = var.database_name
+    },
+    {
+      name  = "DB_USER"
+      value = var.database_master_username
+    }
+  ])
+  web_secrets = var.web_secrets
+  api_secrets = concat(var.api_secrets, [
+    {
+      name      = "DB_PASSWORD"
+      valueFrom = "${module.rds.master_user_secret_arn}:password::"
+    }
+  ])
   enable_container_insights = var.enable_container_insights
   tags                      = local.common_tags
 }
