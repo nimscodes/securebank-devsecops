@@ -36,6 +36,36 @@ terraform plan
 
 ## Notes
 
-No Phase 5D Terraform changes should be applied until the plan is reviewed.
+Phase 5D Terraform changes were applied after plan review.
 
 ALB access logging is optional and disabled by default. Enabling it creates an S3 bucket and adds storage cost based on log volume and retention.
+
+## Phase 5D Apply Evidence
+
+- Terraform apply completed successfully
+- CloudWatch alarms created
+- ALB access logging support configured
+- Migration workflow added as manual GitHub Actions workflow
+- GitHub Actions IAM role policy updated for one-off ECS migration tasks
+- ECS services remained healthy after hardening
+- Web target group remained healthy on port 3000
+- API target group remained healthy on port 4000
+- API `/health` endpoint remained healthy
+
+## Applied CloudWatch Alarms
+
+- securebank-dev-alb-5xx-errors
+- securebank-dev-api-unhealthy-targets
+- securebank-dev-web-unhealthy-targets
+- securebank-dev-api-ecs-cpu-high
+- securebank-dev-web-ecs-cpu-high
+- securebank-dev-api-ecs-memory-high
+- securebank-dev-web-ecs-memory-high
+- securebank-dev-rds-cpu-high
+- securebank-dev-rds-free-storage-low
+
+## Post-Apply Health Check
+
+```json
+{"status":"ok","service":"securebank-api","database":"connected"}
+```
