@@ -28,6 +28,16 @@ output "alb_dns_name" {
   value       = module.alb.alb_dns_name
 }
 
+output "alb_access_logs_bucket_name" {
+  description = "ALB access log bucket name when access logging is enabled."
+  value       = module.alb.access_logs_bucket_name
+}
+
+output "cloudwatch_alarm_names" {
+  description = "CloudWatch operational alarm names."
+  value       = module.cloudwatch.alarm_names
+}
+
 output "ecs_cluster_name" {
   description = "ECS cluster name."
   value       = module.ecs.cluster_name

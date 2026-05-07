@@ -84,6 +84,30 @@ variable "alb_deletion_protection" {
   default     = false
 }
 
+variable "enable_alb_access_logs" {
+  description = "Whether to enable ALB access logging to S3. Disabled by default for dev cost and storage control."
+  type        = bool
+  default     = false
+}
+
+variable "alb_access_logs_bucket_name" {
+  description = "Optional S3 bucket name for ALB access logs. Leave null to generate one when access logging is enabled."
+  type        = string
+  default     = null
+}
+
+variable "alb_access_logs_prefix" {
+  description = "S3 prefix for ALB access logs."
+  type        = string
+  default     = "alb"
+}
+
+variable "alb_access_logs_retention_days" {
+  description = "Number of days to retain ALB access logs in S3 when logging is enabled."
+  type        = number
+  default     = 30
+}
+
 variable "web_image" {
   description = "Container image for the web service."
   type        = string
@@ -220,6 +244,54 @@ variable "log_retention_in_days" {
   description = "CloudWatch log retention period."
   type        = number
   default     = 14
+}
+
+variable "enable_cloudwatch_alarms" {
+  description = "Whether to create CloudWatch operational alarms for the dev environment."
+  type        = bool
+  default     = true
+}
+
+variable "alarm_actions" {
+  description = "SNS topic ARNs or other action ARNs for CloudWatch alarms. Leave empty until notification routing is added."
+  type        = list(string)
+  default     = []
+}
+
+variable "alb_5xx_threshold" {
+  description = "ALB 5xx count in one minute that triggers an alarm."
+  type        = number
+  default     = 5
+}
+
+variable "unhealthy_target_threshold" {
+  description = "Unhealthy target count that triggers an alarm."
+  type        = number
+  default     = 1
+}
+
+variable "ecs_cpu_threshold" {
+  description = "ECS average CPU utilization percentage that triggers an alarm."
+  type        = number
+  default     = 80
+}
+
+variable "ecs_memory_threshold" {
+  description = "ECS average memory utilization percentage that triggers an alarm."
+  type        = number
+  default     = 80
+}
+
+variable "rds_cpu_threshold" {
+  description = "RDS average CPU utilization percentage that triggers an alarm."
+  type        = number
+  default     = 80
+}
+
+variable "rds_free_storage_threshold_bytes" {
+  description = "RDS free storage threshold in bytes. Default is 2 GiB."
+  type        = number
+  default     = 2147483648
 }
 
 variable "secret_recovery_window_in_days" {

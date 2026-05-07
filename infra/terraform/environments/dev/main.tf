@@ -52,8 +52,28 @@ module "cloudwatch" {
 
   web_log_group_name = "/securebank/${var.environment}/web"
   api_log_group_name = "/securebank/${var.environment}/api"
+  name_prefix        = local.name_prefix
   retention_in_days  = var.log_retention_in_days
-  tags               = local.common_tags
+  enable_alarms      = var.enable_cloudwatch_alarms
+  alarm_actions      = var.alarm_actions
+  alb_arn_suffix     = module.alb.alb_arn_suffix
+  target_groups = {
+    web = module.alb.web_target_group_arn_suffix
+    api = module.alb.api_target_group_arn_suffix
+  }
+  ecs_cluster_name = "${local.name_prefix}-cluster"
+  ecs_services = {
+    web = "${local.name_prefix}-web"
+    api = "${local.name_prefix}-api"
+  }
+  rds_instance_identifier          = "${local.name_prefix}-postgres"
+  alb_5xx_threshold                = var.alb_5xx_threshold
+  unhealthy_target_threshold       = var.unhealthy_target_threshold
+  ecs_cpu_threshold                = var.ecs_cpu_threshold
+  ecs_memory_threshold             = var.ecs_memory_threshold
+  rds_cpu_threshold                = var.rds_cpu_threshold
+  rds_free_storage_threshold_bytes = var.rds_free_storage_threshold_bytes
+  tags                             = local.common_tags
 }
 
 module "secrets_manager" {
@@ -97,6 +117,10 @@ module "alb" {
   api_health_check_path      = var.api_health_check_path
   certificate_arn            = var.certificate_arn
   enable_deletion_protection = var.alb_deletion_protection
+  enable_access_logs         = var.enable_alb_access_logs
+  access_logs_bucket_name    = var.alb_access_logs_bucket_name
+  access_logs_prefix         = var.alb_access_logs_prefix
+  access_logs_retention_days = var.alb_access_logs_retention_days
   tags                       = local.common_tags
 }
 

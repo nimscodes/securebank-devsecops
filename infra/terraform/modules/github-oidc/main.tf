@@ -8,6 +8,11 @@ locals {
 
   backend_bucket_arn = "arn:aws:s3:::${var.terraform_state_bucket_name}"
   backend_table_arn  = "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.terraform_lock_table_name}"
+
+  ecs_cluster_arn             = "arn:aws:ecs:${var.aws_region}:${var.aws_account_id}:cluster/${var.name_prefix}-cluster"
+  api_task_definition_arn     = "arn:aws:ecs:${var.aws_region}:${var.aws_account_id}:task-definition/${var.name_prefix}-api:*"
+  ecs_task_execution_role_arn = "arn:aws:iam::${var.aws_account_id}:role/${var.name_prefix}-ecs-execution-role"
+  ecs_task_role_arn           = "arn:aws:iam::${var.aws_account_id}:role/${var.name_prefix}-ecs-task-role"
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
@@ -176,6 +181,70 @@ data "aws_iam_policy_document" "github_actions" {
     resources = [
       local.backend_table_arn
     ]
+  }
+
+  statement {
+    sid    = "ReadEcsMigrationTaskState"
+    effect = "Allow"
+
+    actions = [
+      "ecs:DescribeServices",
+      "ecs:DescribeTasks"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "RunEcsMigrationTask"
+    effect = "Allow"
+
+    actions = [
+      "ecs:RunTask"
+    ]
+
+    resources = [
+      local.api_task_definition_arn
+    ]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "ecs:cluster"
+      values   = [local.ecs_cluster_arn]
+    }
+  }
+
+  statement {
+    sid    = "StopEcsMigrationTask"
+    effect = "Allow"
+
+    actions = [
+      "ecs:StopTask"
+    ]
+
+    resources = [
+      "arn:aws:ecs:${var.aws_region}:${var.aws_account_id}:task/${var.name_prefix}-cluster/*"
+    ]
+  }
+
+  statement {
+    sid    = "PassEcsTaskRolesForMigration"
+    effect = "Allow"
+
+    actions = [
+      "iam:PassRole"
+    ]
+
+    resources = [
+      local.ecs_task_execution_role_arn,
+      local.ecs_task_role_arn
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
   }
 }
 

@@ -58,6 +58,30 @@ variable "enable_deletion_protection" {
   default     = false
 }
 
+variable "enable_access_logs" {
+  description = "Whether ALB access logs are delivered to S3."
+  type        = bool
+  default     = false
+}
+
+variable "access_logs_bucket_name" {
+  description = "Optional existing or generated S3 bucket name for ALB access logs. Leave null to generate a dev bucket name when logging is enabled."
+  type        = string
+  default     = null
+}
+
+variable "access_logs_prefix" {
+  description = "S3 prefix for ALB access logs."
+  type        = string
+  default     = "alb"
+}
+
+variable "access_logs_retention_days" {
+  description = "Number of days to retain ALB access logs in S3."
+  type        = number
+  default     = 30
+}
+
 variable "tags" {
   description = "Tags applied to ALB resources."
   type        = map(string)

@@ -16,6 +16,16 @@ enable_nat_gateway = false
 # Enabled so private ECS tasks can pull ECR images and write logs without NAT.
 enable_private_service_endpoints = true
 
+# Operational alarms are planned in Phase 5D. Add SNS topic ARNs later when notification routing exists.
+enable_cloudwatch_alarms = true
+alarm_actions            = []
+
+# Optional ALB access logging. Leave disabled until you intentionally accept S3 log storage cost.
+enable_alb_access_logs          = false
+alb_access_logs_bucket_name     = null
+alb_access_logs_prefix          = "alb"
+alb_access_logs_retention_days  = 30
+
 web_image = "985059095414.dkr.ecr.us-east-1.amazonaws.com/securebank-dev-web:latest"
 api_image = "985059095414.dkr.ecr.us-east-1.amazonaws.com/securebank-dev-api:latest"
 
