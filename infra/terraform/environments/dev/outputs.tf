@@ -38,6 +38,16 @@ output "cloudwatch_alarm_names" {
   value       = module.cloudwatch.alarm_names
 }
 
+output "waf_web_acl_name" {
+  description = "WAF Web ACL name when WAF is enabled."
+  value       = var.enable_waf ? module.waf[0].web_acl_name : null
+}
+
+output "waf_web_acl_arn" {
+  description = "WAF Web ACL ARN when WAF is enabled."
+  value       = var.enable_waf ? module.waf[0].web_acl_arn : null
+}
+
 output "ecs_cluster_name" {
   description = "ECS cluster name."
   value       = module.ecs.cluster_name

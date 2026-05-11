@@ -82,6 +82,36 @@ variable "access_logs_retention_days" {
   default     = 30
 }
 
+variable "security_header_content_security_policy" {
+  description = "Content-Security-Policy response header inserted by ALB listeners."
+  type        = string
+  default     = "default-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+}
+
+variable "security_header_server_enabled" {
+  description = "Whether the ALB Server response header is enabled."
+  type        = bool
+  default     = false
+}
+
+variable "security_header_strict_transport_security" {
+  description = "Strict-Transport-Security response header used only by the optional HTTPS listener."
+  type        = string
+  default     = "max-age=31536000; includeSubDomains"
+}
+
+variable "security_header_x_content_type_options" {
+  description = "X-Content-Type-Options response header inserted by ALB listeners."
+  type        = string
+  default     = "nosniff"
+}
+
+variable "security_header_x_frame_options" {
+  description = "X-Frame-Options response header inserted by ALB listeners."
+  type        = string
+  default     = "DENY"
+}
+
 variable "tags" {
   description = "Tags applied to ALB resources."
   type        = map(string)

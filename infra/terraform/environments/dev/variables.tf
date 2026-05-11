@@ -84,6 +84,54 @@ variable "alb_deletion_protection" {
   default     = false
 }
 
+variable "enable_waf" {
+  description = "Whether to create and associate AWS WAF with the public ALB."
+  type        = bool
+  default     = true
+}
+
+variable "waf_managed_rule_action" {
+  description = "How managed WAF rule groups are enforced. Use count for monitor mode or block for normal rule actions."
+  type        = string
+  default     = "count"
+
+  validation {
+    condition     = contains(["count", "block"], var.waf_managed_rule_action)
+    error_message = "waf_managed_rule_action must be count or block."
+  }
+}
+
+variable "waf_managed_rule_groups" {
+  description = "AWS managed WAF rule groups attached to the ALB Web ACL."
+  type = list(object({
+    name        = string
+    metric_name = string
+    priority    = number
+  }))
+  default = [
+    {
+      name        = "AWSManagedRulesCommonRuleSet"
+      metric_name = "common"
+      priority    = 10
+    },
+    {
+      name        = "AWSManagedRulesKnownBadInputsRuleSet"
+      metric_name = "known-bad-inputs"
+      priority    = 20
+    },
+    {
+      name        = "AWSManagedRulesAmazonIpReputationList"
+      metric_name = "ip-reputation"
+      priority    = 30
+    },
+    {
+      name        = "AWSManagedRulesSQLiRuleSet"
+      metric_name = "sqli"
+      priority    = 40
+    }
+  ]
+}
+
 variable "enable_alb_access_logs" {
   description = "Whether to enable ALB access logging to S3. Disabled by default for dev cost and storage control."
   type        = bool

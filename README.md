@@ -1,6 +1,6 @@
 # SecureBank
 
-SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, Phase 4 prepares ECR, GitHub OIDC, and remote backend support, Phase 5A bootstraps GitHub OIDC and ECR, Phase 5B pushes images to ECR, Phase 5C deploys the AWS dev environment, and Phase 5D adds operational hardening.
+SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, Phase 4 prepares ECR, GitHub OIDC, and remote backend support, Phase 5A bootstraps GitHub OIDC and ECR, Phase 5B pushes images to ECR, Phase 5C deploys the AWS dev environment, Phase 5D adds operational hardening, and Phase 6 adds the security and compliance layer.
 
 ## Repository Structure
 
@@ -150,6 +150,7 @@ The workflow uses GitHub OIDC to authenticate to AWS without static access keys.
 
 ```text
 Internet
+  -> AWS WAF
   -> public Application Load Balancer
   -> private ECS Fargate web and API services
   -> private encrypted RDS PostgreSQL
@@ -157,12 +158,14 @@ Internet
 
 The dev environment uses:
 
+- AWS WAF attached to the public ALB in monitor/count mode
 - Public ALB for HTTP traffic
 - Private ECS tasks for web and API containers
 - Private RDS PostgreSQL with AWS-managed master password
 - CloudWatch log groups for container output
 - VPC endpoints for ECR, CloudWatch Logs, Secrets Manager, and S3 so NAT Gateway stays disabled
 - Security groups enforcing internet -> ALB -> ECS -> RDS
+- App and ALB-layer security headers, with HSTS deferred until HTTPS is added
 
 ## CI/CD Summary
 
@@ -170,6 +173,7 @@ The dev environment uses:
 - ECR push workflow builds and pushes web/API images using GitHub OIDC.
 - Terraform plan workflow authenticates with GitHub OIDC and stops at plan.
 - Database migration workflow is manual and runs Prisma migrations as a one-off ECS task.
+- Terraform apply is intentionally manual after plan review.
 
 ## DevSecOps Controls
 
@@ -179,12 +183,15 @@ The dev environment uses:
 - Database password is AWS-managed and injected at runtime
 - Terraform remote state bootstrap support with S3 and DynamoDB locking
 - Security scanning with npm audit, Trivy, and Checkov
-- CloudWatch alarms planned for ALB, ECS, target health, and RDS
+- AWS WAF managed rule groups for common threats, known bad inputs, IP reputation, and SQL injection
+- Security headers through Helmet, Next.js, and ALB listener attributes where supported
+- CloudWatch alarms for ALB, ECS, target health, and RDS
 - ALB access logging support is optional and disabled by default for dev cost control
 
 ## AWS Services Used
 
 - Amazon VPC
+- AWS WAF
 - Application Load Balancer
 - Amazon ECS on Fargate
 - Amazon ECR
@@ -199,6 +206,9 @@ The dev environment uses:
 
 - `docs/evidence/phase-5c-deployment.md`
 - `docs/evidence/phase-5d-hardening.md`
+- `docs/evidence/phase-6-security-compliance.md`
+- `docs/architecture.md`
+- `docs/compliance-mapping.md`
 
 ## Phase 5C: Dev Deployment
 
@@ -218,5 +228,20 @@ Added:
 - CloudWatch alarms for ALB 5xx errors, ECS CPU/memory, unhealthy targets, RDS CPU, and RDS free storage
 - Optional ALB access logging support with S3 retention controls
 - Runbooks for rollback, API health check failures, database connection failures, and migrations
+
+## Phase 6: Security and Compliance
+
+Phase 6 adds the security and compliance layer for the deployed AWS dev platform.
+
+Added:
+
+- AWS WAF Web ACL for the public ALB
+- AWS managed WAF rule groups in count mode by default
+- Security headers at app and ALB layers
+- IAM wildcard review and documented rationale
+- Compliance mapping for OWASP Top 10, NIST SSDF, CIS AWS Foundations concepts, and DevSecOps controls
+- Architecture diagram source with Mermaid
+
+Phase 6 stops after Terraform plan review. It does not run `terraform apply` automatically.
 
 No Phase 5D Terraform changes should be applied until the plan is reviewed.

@@ -124,6 +124,17 @@ module "alb" {
   tags                       = local.common_tags
 }
 
+module "waf" {
+  count  = var.enable_waf ? 1 : 0
+  source = "../../modules/waf"
+
+  name_prefix         = local.name_prefix
+  alb_arn             = module.alb.alb_arn
+  managed_rule_action = var.waf_managed_rule_action
+  managed_rule_groups = var.waf_managed_rule_groups
+  tags                = local.common_tags
+}
+
 module "ecs" {
   source = "../../modules/ecs"
 

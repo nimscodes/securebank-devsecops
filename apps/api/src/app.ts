@@ -11,7 +11,11 @@ export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
-  app.use(helmet());
+  app.use(
+    helmet({
+      hsts: false
+    })
+  );
   app.use(
     cors({
       origin: env.CORS_ORIGIN,

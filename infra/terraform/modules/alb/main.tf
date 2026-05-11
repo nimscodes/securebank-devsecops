@@ -180,6 +180,11 @@ resource "aws_lb_listener" "http" {
   port              = 80
   protocol          = "HTTP"
 
+  routing_http_response_content_security_policy_header_value = var.security_header_content_security_policy
+  routing_http_response_server_enabled                       = var.security_header_server_enabled
+  routing_http_response_x_content_type_options_header_value  = var.security_header_x_content_type_options
+  routing_http_response_x_frame_options_header_value         = var.security_header_x_frame_options
+
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.web.arn
@@ -214,6 +219,12 @@ resource "aws_lb_listener" "https" {
   protocol          = "HTTPS"
   certificate_arn   = var.certificate_arn
   ssl_policy        = var.ssl_policy
+
+  routing_http_response_content_security_policy_header_value   = var.security_header_content_security_policy
+  routing_http_response_server_enabled                         = var.security_header_server_enabled
+  routing_http_response_strict_transport_security_header_value = var.security_header_strict_transport_security
+  routing_http_response_x_content_type_options_header_value    = var.security_header_x_content_type_options
+  routing_http_response_x_frame_options_header_value           = var.security_header_x_frame_options
 
   default_action {
     type             = "forward"

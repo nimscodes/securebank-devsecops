@@ -133,7 +133,11 @@ data "aws_iam_policy_document" "github_actions" {
       "s3:GetLifecycleConfiguration",
       "s3:GetPublicAccessBlock",
       "s3:ListBucket",
-      "sts:GetCallerIdentity"
+      "sts:GetCallerIdentity",
+      "wafv2:GetWebACL",
+      "wafv2:GetWebACLForResource",
+      "wafv2:ListResourcesForWebACL",
+      "wafv2:ListWebACLs"
     ]
 
     resources = ["*"]

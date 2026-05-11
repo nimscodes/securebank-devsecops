@@ -16,6 +16,10 @@ enable_nat_gateway = false
 # Enabled so private ECS tasks can pull ECR images and write logs without NAT.
 enable_private_service_endpoints = true
 
+# Enabled in monitor/count mode for dev to collect WAF telemetry before blocking traffic.
+enable_waf              = true
+waf_managed_rule_action = "count"
+
 # Operational alarms are planned in Phase 5D. Add SNS topic ARNs later when notification routing exists.
 enable_cloudwatch_alarms = true
 alarm_actions            = []
