@@ -1,6 +1,6 @@
 # Compliance Mapping
 
-This document maps SecureBank controls to common security and compliance concepts. It is portfolio evidence, not a formal certification.
+This document maps SecureBank controls to common security and compliance concepts. It is not a formal certification.
 
 ## OWASP Top 10
 
@@ -47,4 +47,4 @@ This document maps SecureBank controls to common security and compliance concept
 - Terraform plans are reviewed before apply.
 - Runtime alarms detect common service and database health issues.
 - Runbooks document rollback, health check failures, database failures, and migrations.
-- Evidence documents capture deployed-state proof for portfolio review.
+- Evidence documents capture deployed-state proof for review.

@@ -1,247 +1,214 @@
 # SecureBank
 
-SecureBank is a production-style DevSecOps portfolio monorepo. Phase 1 creates the application foundation: a Next.js frontend, an Express API, PostgreSQL with Prisma, and local Docker orchestration. Phase 2 adds continuous integration, app validation, and security scanning with GitHub Actions. Phase 3 adds the Terraform AWS infrastructure foundation, Phase 4 prepares ECR, GitHub OIDC, and remote backend support, Phase 5A bootstraps GitHub OIDC and ECR, Phase 5B pushes images to ECR, Phase 5C deploys the AWS dev environment, Phase 5D adds operational hardening, and Phase 6 adds the security and compliance layer.
+SecureBank is a cloud DevSecOps project built around a simple banking-style web app. The app is intentionally small; the main work is the platform around it: CI/CD, containers, Terraform, AWS deployment, monitoring, security controls, runbooks, and evidence.
 
-## Repository Structure
+## Why I Built This
+
+Most sample projects stop at "the app runs." I wanted this repo to show how I think about the work around an app:
+
+- Can another engineer run it locally?
+- Are builds, scans, and Docker images automated?
+- Is AWS access handled without long-lived keys?
+- Is infrastructure defined in code and reviewed before apply?
+- Are the database, network, and runtime services private where they should be?
+- Is there enough evidence to explain the project in an interview?
+
+SecureBank is my answer to those questions.
+
+## Current Architecture
+
+```mermaid
+flowchart TD
+  dev["Developer"] --> repo["GitHub"]
+  repo --> actions["GitHub Actions"]
+  actions --> scans["CI checks and security scans"]
+  actions --> ecr["Amazon ECR"]
+  actions --> tf["Terraform plan"]
+  actions --> migrations["Manual Prisma migration workflow"]
+
+  user["User"] --> waf["AWS WAF"]
+  waf --> alb["Application Load Balancer"]
+  alb --> web["ECS Fargate web service"]
+  alb --> api["ECS Fargate API service"]
+  api --> rds["Private RDS PostgreSQL"]
+  api --> secrets["Secrets Manager"]
+  web --> logs["CloudWatch"]
+  api --> logs
+  rds --> logs
+
+  ecr --> web
+  ecr --> api
+```
+
+The dev environment uses ECS Fargate, an internet-facing ALB, private app subnets, private database subnets, encrypted RDS PostgreSQL, Secrets Manager, CloudWatch, VPC endpoints, and AWS WAF. NAT Gateway is disabled by default for cost control.
+
+More detail: [docs/architecture.md](docs/architecture.md)
+
+## What Is In The Repo
 
 ```text
 apps/
-  web/        Next.js frontend with TypeScript and Tailwind
-  api/        Node.js Express API with TypeScript and Prisma
+  web/        Next.js frontend
+  api/        Express API with Prisma
 infra/
-  terraform/ Terraform modules, bootstrap environments, and dev environment
-docs/         Project documentation
+  terraform/ Modular AWS Terraform
+docs/         Case study, runbooks, evidence, cleanup guide
 .github/
-  workflows/ GitHub Actions CI and security workflows
+  workflows/ CI, Terraform plan, image push, migrations
 ```
 
-## Prerequisites
+## Tech Stack
 
-- Node.js 20.11+
-- npm 10.2+
+- Next.js, TypeScript, Tailwind CSS
+- Node.js, Express, Prisma
+- PostgreSQL
 - Docker and Docker Compose
+- GitHub Actions
+- Terraform
+- AWS ECS Fargate, ALB, ECR, RDS, Secrets Manager, CloudWatch, WAF, S3, DynamoDB, IAM
+- npm audit, Trivy, Checkov
+
+## CI/CD
+
+The project uses separate workflows instead of one giant pipeline:
+
+- CI validates dependencies, linting, type checks, builds, Prisma generation, Docker builds, and security scans.
+- ECR image push builds web/API images and pushes them using GitHub OIDC.
+- Terraform plan authenticates to AWS with OIDC and stops at review.
+- Database migrations are manual and run as an ECS one-off task.
+
+Terraform apply is intentionally manual. That keeps infrastructure changes reviewable and avoids accidental deployment from a normal push.
+
+## Security Controls
+
+The main security decisions are:
+
+- GitHub Actions uses OIDC instead of static AWS keys.
+- RDS is private, encrypted, and only reachable from the API service.
+- ECS tasks run in private subnets.
+- Security groups enforce internet -> ALB -> ECS -> RDS.
+- WAF is attached to the ALB and starts in count mode.
+- App and ALB security headers are configured.
+- Terraform state is designed for S3 encryption and DynamoDB locking.
+- CI includes dependency, filesystem, and IaC scanning.
+
+Full list: [docs/security-controls.md](docs/security-controls.md)
+
+## Monitoring And Operations
+
+The dev stack includes:
+
+- CloudWatch logs for web and API containers
+- CloudWatch alarms for ALB 5xx, target health, ECS CPU/memory, RDS CPU, and RDS storage
+- Optional ALB access log support
+- Runbooks for rollback, API health failures, database failures, and migrations
+- Cleanup guidance for shutting down AWS resources after demos
+
+Runbooks:
+
+- [Deployment rollback](docs/runbooks/deployment-rollback.md)
+- [API health check failure](docs/runbooks/api-healthcheck-failure.md)
+- [Database connection failure](docs/runbooks/database-connection-failure.md)
+- [Database migrations](docs/runbooks/database-migrations.md)
+
+## Evidence
+
+The repo includes written evidence for the major cloud phases:
+
+- [Phase 5C deployment evidence](docs/evidence/phase-5c-deployment.md)
+- [Phase 5D hardening evidence](docs/evidence/phase-5d-hardening.md)
+- [Phase 6 security and compliance evidence](docs/evidence/phase-6-security-compliance.md)
+- [Screenshot checklist](docs/screenshots/README.md)
+
+Screenshots are intentionally separate so account-sensitive AWS details can be reviewed and redacted before they are added.
 
 ## Local Development
 
-1. Install dependencies:
+Install dependencies:
 
-   ```bash
-   npm install
-   ```
-
-2. Create environment files:
-
-   ```bash
-   cp apps/web/.env.example apps/web/.env
-   cp apps/api/.env.example apps/api/.env
-   ```
-
-3. Start PostgreSQL and pgAdmin:
-
-   ```bash
-   docker compose up -d postgres pgadmin
-   ```
-
-4. Generate Prisma client and run migrations:
-
-   ```bash
-   npm run prisma:generate -w apps/api
-   npm run prisma:migrate -w apps/api
-   ```
-
-5. Run the applications:
-
-   ```bash
-   npm run dev
-   ```
-
-Frontend: http://localhost:3000  
-API: http://localhost:4000  
-pgAdmin: http://localhost:5050
-
-pgAdmin credentials:
-
-```text
-Email: admin@securebank.dev
-Password: securebank_admin
+```bash
+npm install
 ```
 
-## Docker Development Stack
+Create local env files:
 
-Build and run everything locally:
+```bash
+cp apps/web/.env.example apps/web/.env
+cp apps/api/.env.example apps/api/.env
+```
+
+Start PostgreSQL and pgAdmin:
+
+```bash
+docker compose up -d postgres pgadmin
+```
+
+Prepare Prisma:
+
+```bash
+npm run prisma:generate -w apps/api
+npm run prisma:migrate -w apps/api
+```
+
+Run the apps:
+
+```bash
+npm run dev
+```
+
+Local URLs:
+
+- Web: http://localhost:3000
+- API: http://localhost:4000
+- pgAdmin: http://localhost:5050
+
+Full Docker stack:
 
 ```bash
 docker compose up --build
 ```
 
-The stack includes:
+## Useful Checks
 
-- `web`: Next.js app on port 3000
-- `api`: Express API on port 4000
-- `postgres`: PostgreSQL on port 5432
-- `pgadmin`: pgAdmin on port 5050
-
-## Phase 1 Scope
-
-- Next.js frontend with TypeScript and Tailwind
-- Express API with TypeScript
-- Prisma PostgreSQL connection
-- Auth-ready domain models for users, accounts, and transactions
-- Dockerfiles for frontend and API
-- Docker Compose for app services and database tooling
-
-## Phase 2 Scope
-
-- GitHub Actions CI pipeline in `.github/workflows/ci.yml`
-- App validation with `npm ci`, Prisma client generation, lint, typecheck, and build
-- Dependency vulnerability checks with `npm audit --audit-level=high`
-- Trivy filesystem security scan for high and critical vulnerabilities
-- Checkov IaC scan against `infra/terraform` with soft-fail enabled while Terraform is placeholder-only
-- Docker build validation for the API and web Dockerfiles without pushing images
-
-Phase 2 does not include AWS deployment, ECR, ECS, OIDC, or Terraform infrastructure resources.
-
-## Phase 3 Scope
-
-- Modular Terraform foundation for VPC, security groups, ALB, ECS, RDS, Secrets Manager placeholders, and CloudWatch
-- Dev environment under `infra/terraform/environments/dev`
-- Cost guardrails with NAT gateway disabled by default
-- Terraform validation only, with no `terraform apply`
-
-## Phase 4 Scope
-
-- ECR Terraform module for web and API image repositories
-- GitHub Actions OIDC Terraform module scoped to `nimscodes/securebank-devsecops`
-- Terraform backend bootstrap code for future S3 state and DynamoDB locking
-- Safe Terraform plan workflow using OIDC placeholders
-- Safe Docker build workflow that does not push images
-- Deployment preparation documentation in `docs/deployment-prep.md`
-
-AWS deployment, static credentials, ECR image publishing, remote backend activation, runtime security scanning, and production infrastructure are intentionally deferred to later phases.
-
-## Phase 5A: AWS Bootstrap
-
-Implemented the secure AWS automation foundation for the project:
-
-- Created ECR repositories for web and API containers
-- Configured ECR image lifecycle policies
-- Created GitHub OIDC identity provider
-- Created GitHub Actions IAM role with restricted trust policy
-- Enabled GitHub Actions to authenticate to AWS without static access keys
-
-No application infrastructure was deployed in this phase.
-
-## Phase 5B: ECR Image Push
-
-Added a GitHub Actions workflow that builds the web and API Docker images and pushes them to the existing Amazon ECR repositories from Phase 5A.
-
-Required GitHub Actions repository variables:
-
-```text
-AWS_REGION
-AWS_ROLE_ARN
-WEB_ECR_REPOSITORY_URL
-API_ECR_REPOSITORY_URL
+```bash
+npm run format
+npm run lint --workspaces
+npm run typecheck --workspaces
+npm run build --workspaces
+docker compose config
 ```
 
-The workflow uses GitHub OIDC to authenticate to AWS without static access keys. ECS deployment is not part of this phase.
+Terraform:
 
-## Current Deployed Architecture
-
-```text
-Internet
-  -> AWS WAF
-  -> public Application Load Balancer
-  -> private ECS Fargate web and API services
-  -> private encrypted RDS PostgreSQL
+```bash
+cd infra/terraform/environments/dev
+terraform init
+terraform validate
+terraform plan
 ```
 
-The dev environment uses:
+Do not commit `.env`, `terraform.tfvars`, `.terraform/`, `.tfstate`, `.tfplan`, AWS keys, database passwords, or private keys.
 
-- AWS WAF attached to the public ALB in monitor/count mode
-- Public ALB for HTTP traffic
-- Private ECS tasks for web and API containers
-- Private RDS PostgreSQL with AWS-managed master password
-- CloudWatch log groups for container output
-- VPC endpoints for ECR, CloudWatch Logs, Secrets Manager, and S3 so NAT Gateway stays disabled
-- Security groups enforcing internet -> ALB -> ECS -> RDS
-- App and ALB-layer security headers, with HSTS deferred until HTTPS is added
+## Documentation
 
-## CI/CD Summary
+- [Project case study](docs/project-case-study.md)
+- [Architecture](docs/architecture.md)
+- [Interview guide](docs/interview-guide.md)
+- [Resume bullets](docs/resume-bullets.md)
+- [Compliance mapping](docs/compliance-mapping.md)
+- [AWS cleanup guide](docs/aws-cleanup-guide.md)
+- [Final checklist](docs/final-project-checklist.md)
 
-- CI validates install, lint, typecheck, build, Docker builds, npm audit, Trivy, and Checkov.
-- ECR push workflow builds and pushes web/API images using GitHub OIDC.
-- Terraform plan workflow authenticates with GitHub OIDC and stops at plan.
-- Database migration workflow is manual and runs Prisma migrations as a one-off ECS task.
-- Terraform apply is intentionally manual after plan review.
+## Interview Notes
 
-## DevSecOps Controls
+The strongest talking points for this project are:
 
-- No static AWS access keys in GitHub Actions
-- GitHub OIDC role scoped to this repository
-- RDS is private and encrypted
-- Database password is AWS-managed and injected at runtime
-- Terraform remote state bootstrap support with S3 and DynamoDB locking
-- Security scanning with npm audit, Trivy, and Checkov
-- AWS WAF managed rule groups for common threats, known bad inputs, IP reputation, and SQL injection
-- Security headers through Helmet, Next.js, and ALB listener attributes where supported
-- CloudWatch alarms for ALB, ECS, target health, and RDS
-- ALB access logging support is optional and disabled by default for dev cost control
+- Why OIDC is safer than static AWS credentials
+- How the private ECS/RDS network is structured
+- Why Terraform plan and apply are separated
+- How database migrations are handled safely
+- What was monitored in CloudWatch and why
+- How WAF was introduced in count mode before block mode
+- How costs were controlled during development
 
-## AWS Services Used
-
-- Amazon VPC
-- AWS WAF
-- Application Load Balancer
-- Amazon ECS on Fargate
-- Amazon ECR
-- Amazon RDS for PostgreSQL
-- AWS Secrets Manager
-- Amazon CloudWatch
-- Amazon S3
-- Amazon DynamoDB
-- AWS IAM and GitHub OIDC
-
-## Evidence
-
-- `docs/evidence/phase-5c-deployment.md`
-- `docs/evidence/phase-5d-hardening.md`
-- `docs/evidence/phase-6-security-compliance.md`
-- `docs/architecture.md`
-- `docs/compliance-mapping.md`
-
-## Phase 5C: Dev Deployment
-
-Deployed the first controlled AWS dev application environment.
-
-Phase 5C keeps NAT Gateway disabled, uses the Phase 5A ECR images, keeps RDS private and encrypted, injects database connection settings into ECS without hardcoded passwords, and adds private AWS service endpoints so ECS tasks can pull images and write logs without public internet egress.
-
-The deployed evidence is documented in `docs/evidence/phase-5c-deployment.md`.
-
-## Phase 5D: Dev Hardening
-
-Phase 5D prepares operational readiness for the deployed dev environment.
-
-Added:
-
-- Manual Prisma migration workflow using one-off ECS tasks
-- CloudWatch alarms for ALB 5xx errors, ECS CPU/memory, unhealthy targets, RDS CPU, and RDS free storage
-- Optional ALB access logging support with S3 retention controls
-- Runbooks for rollback, API health check failures, database connection failures, and migrations
-
-## Phase 6: Security and Compliance
-
-Phase 6 adds the security and compliance layer for the deployed AWS dev platform.
-
-Added:
-
-- AWS WAF Web ACL for the public ALB
-- AWS managed WAF rule groups in count mode by default
-- Security headers at app and ALB layers
-- IAM wildcard review and documented rationale
-- Compliance mapping for OWASP Top 10, NIST SSDF, CIS AWS Foundations concepts, and DevSecOps controls
-- Architecture diagram source with Mermaid
-
-Phase 6 stops after Terraform plan review. It does not run `terraform apply` automatically.
-
-No Phase 5D Terraform changes should be applied until the plan is reviewed.
+Full prep doc: [docs/interview-guide.md](docs/interview-guide.md)
